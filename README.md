@@ -1,37 +1,33 @@
-# weiboPicDownloader ![](https://img.shields.io/badge/python-2.7%7C3.4+-blue.svg)
+# (免)登录下载微博图片 ![](https://img.shields.io/badge/python-3.4+-blue.svg)
 
-(not real) weibo user album batch download tool (CLI)
+批量下载微博用户图片 (CLI)
 
-build user album by picking all photos from original weibos in user's post feed
+## 致谢
 
-for more weibo free login APIs, turn to [wiki](https://github.com/nondanee/weiboPicDownloader/wiki)
+根源自多年不更新的 Python 项目 [https://github.com/nondanee/weiboPicDownloader](https://github.com/nondanee/weiboPicDownloader/blob/dev/weiboPicDownloader.py)  
 
-**[中文 README](README-CN.md)**
+感谢原作者 nondance
 
+## openWPD与原代码相比的改进之处
 
-## References
++ 修复了失效的图片下载功能
++ 对原先的代码添加了注释，改变了if代码的结构，通过适量添加变量以增加程序的可读性、可维护性与稳定性
++ 摒弃对Python2与非Windows平台的支持
++ 引入了Python3的新特性
++ 大幅减少了库的引用和依赖
++ 精简了README文件数量
 
-[yAnXImIN/weiboPicDownloader](https://github.com/yAnXImIN/weiboPicDownloader)  
-
-[ningshu/weiboPicDownloader](https://github.com/ningshu/weiboPicDownloader) 
-
-## Overview
-
-![](https://user-images.githubusercontent.com/26399680/51592598-fd48b980-1f2a-11e9-9687-4670e7dfcd83.png)
-
-## Dependencies
+## 依赖
 
 ```
 $ pip install requests
-$ pip install colorama # only windows version under 10.0.14393 required
-$ pip install futures # only python2 environment required
 ```
 
-## Usage
+## 使用
 
 ```
-$ python .\weiboPicDownloader.py -h
-usage: weiboPicDownloader [-h] (-u user [user ...] | -f file [file ...])
+$ python openwpd.py -h
+usage: openwpd [-h] (-u user [user ...] | -f file [file ...])
                           [-d directory] [-s size] [-r retry] [-i interval]
                           [-c cookie] [-b boundary] [-n name] [-v] [-o]
 
@@ -50,26 +46,26 @@ optional arguments:
   -o                  overwrite existing files
 ```
 
-Required argument (choose one)
+必需参数（任选一）
 
-- `-u user ...` users (nickname or id)
-- `-f file ...` user list files (nickname or id, separated by linefeed in the file)
+- `-u user` 用户（昵称或 id）
+- `-f file` 用户列表文件（昵称或 id，一个用户占一行）
 
-Optional arguments
+可选参数
 
-- `-d directory` media saving path (default value: `./weiboPic`)
-- `-s size` thread pool size (default value: `20`)
-- `-r retry` max retries (default value: `2`)
-- `-i interval` request interval (default value: `1`, unit: second)
-- `-c cookie` login credential (only need the value of a certain key named `SUB`)
-- `-b boundary` mid/bid/date range of weibos (format: `id:id` between, `:id` before, `id:` after, `id` certain, `:` all)
-- `-n name` naming template (identifier: `url`, `index`, `type`, `mid`, `bid`, `date`, `text`, `name`, like ["f-Strings"](https://www.python.org/dev/peps/pep-0498/#abstract) syntax)
-- `-v` download miaopai videos at the same time
-- `-o` overwrite existing files (skipping if exists for default)
+- `-d directory` 图片保存路径（默认值：`./weiboPic`）
+- `-s size` 线程池大小（默认值：`20`）
+- `-r retry` 最大重试次数（默认值：`2`）
+- `-i interval` 请求间隔（默认值：`1`，单位：秒）
+- `-c cookie` 登录凭据 (需要 cookie 中的 `SUB` 值)
+- `-b boundary` 微博 mid/bid 或日期范围（格式：`id:id` 两者之间，`:id` 之前，`id:` 之后，`id` 指定，`:` 全部）
+- `-n name` 命名模板 (标识符: `url`、`index`、`type`、`mid`、`bid`、`date`、`text`、`name`，类似 ["f-Strings"](https://www.python.org/dev/peps/pep-0498/#abstract) 语法)
+- `-v` 同时下载秒拍视频
+- `-o` 重新下载已保存的文件（默认跳过）
 
-✳How to get the value of `SUB` from browser (Chrome for example)
+✳如何从浏览器中取得 `SUB` 的值（以 Chrome 举例）
 
-1. jump to https://m.weibo.cn and log in
-2. inspect > Application > Cookies > https://m.weibo.cn
-3. double click the `SUB` line and copy its value
-4. paste it into terminal and run like  `-c <value>`
+1. 转到 https://m.weibo.cn 并登录
+2. 右键检查 > Application > Cookies > https://m.weibo.cn
+3. 双击 `SUB` 所在行并右键拷贝它的值
+4. 将 `SUB` 的值粘贴到命令行窗口，以 `-c <value>` 的方式运行程序

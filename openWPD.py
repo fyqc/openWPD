@@ -248,8 +248,6 @@ def get_resources(uid, video, interval, limit):
 
     while empty < aware and not exceed:
         try:
-            # url = 'https://m.weibo.cn/api/container/getIndex?count={}&page={}&containerid=107603{}'.format(
-            #     size, page, uid)
             url = f'https://m.weibo.cn/api/container/getIndex?count={size}&page={page}&containerid=107603{uid}'
             response = request_fit('GET', url, cookie=token)
             assert response.status_code != 418
@@ -423,7 +421,6 @@ if __name__ == '__main__':
         if os.path.exists(base):
             if not os.path.isdir(base):
                 quit('saving path is not a directory')
-        # elif confirm('directory "{}" doesn\'t exist, help to create?'.format(base)):
         elif confirm(f'directory "{base}" doesn\'t exist, help to create?'):
             make_dir(base)
         else:
@@ -437,8 +434,6 @@ if __name__ == '__main__':
     boundary = boundary * 2 if len(boundary) == 1 else boundary
 
     def numberify(x):
-        # return int(x) if re.search(
-        #     r'^\d+$', x) else bid_to_mid(x)
         if re.search(r'^\d+$', x):
             return int(x)
         else:
@@ -528,10 +523,6 @@ if __name__ == '__main__':
                     cancel = True
                 finally:
                     if not cancel:
-                        # print_fit('{} {}'.format(
-                        #     'downloading...' if done != total else 'all tasks done',
-                        #     progress(done, total, True)
-                        # ), pin=True)
                         print_fit(
                             f"{'downloading...' if done != total else 'all tasks done'} \
                                 {progress(done, total, True)}", pin=True)

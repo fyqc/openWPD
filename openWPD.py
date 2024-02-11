@@ -1,3 +1,4 @@
+from typing import Dict
 import argparse
 import concurrent.futures
 import datetime
@@ -145,8 +146,7 @@ def request_fit(method, url, max_retry=0, cookie=None, stream=False):
 def read_from_file(path):
     try:
         with open(path, 'r') as f:
-            for line in f:
-                return [line.strip()]
+            return [line.strip() for line in f]
     except Exception as e:
         quit(str(e))
 
@@ -154,10 +154,10 @@ def read_from_file(path):
 def nickname_to_uid(nickname):
     url = f'https://m.weibo.cn/n/{nickname}'
     response = request_fit('GET', url, cookie=token)
-    if re.search(r'/u/\d{10}$', response.url):
-        return response.url[-10:]
+    if '/u/' in response.url:
+        return response.url.split('/')[-1]
     else:
-        return
+        return None
 
 
 def uid_to_nickname(uid):
@@ -165,8 +165,8 @@ def uid_to_nickname(uid):
     response = request_fit('GET', url, cookie=token)
     try:
         return json.loads(response.text)['data']['userInfo']['screen_name']
-    except:
-        return
+    except KeyError:
+        return None
 
 
 def bid_to_mid(string):
@@ -205,18 +205,29 @@ def bid_to_mid(string):
 
 def parse_date(text):
     now = datetime.datetime.now()
+
+    # Case: Relative time (e.g., X hours ago)
     if '前' in text:
         if '小时' in text:
-            return (now - datetime.timedelta(hours=int(re.search(r'\d+', text).group()))).date()
+            # Extract the number of hours from the text and subtract it from the current time
+            hours_ago = int(re.search(r'\d+', text).group())
+            return (now - datetime.timedelta(hours=hours_ago)).date()
         else:
+            # '前' without '小时' indicates the current date
             return now.date()
+
+    # Case: Yesterday
     elif '昨天' in text:
         return now.date() - datetime.timedelta(days=1)
+
+    # Case: Date specified in the text
     elif re.search(r'^[\d|-]+$', text):
+        # Check if the date format includes a year, if not, use the current year
         if not re.search(r'^\d{4}', text):
             d = (str(now.year) + '-')
         else:
             d = ''
+        # Convert the text to a date format
         return datetime.datetime.strptime(d + text, '%Y-%m-%d').date()
 
 
@@ -305,30 +316,35 @@ def get_resources(uid, video, interval, limit):
     return resources
 
 
-def format_name(item):
-    item['name'] = re.sub(r'\?\S+$', '', re.sub(r'^\S+/', '', item['url']))
+def format_name(item: Dict[str, str]) -> str:
+    # Extracting the name from the URL
+    name_from_url = re.sub(r'\?\S+$', '', re.sub(r'^\S+/', '', item['url']))
 
-    def safeify(name):
-        template: dict = {'\\': '＼', '/': '／', ':': '：', '*': '＊',
-                          '?': '？', '"': '＂', '<': '＜', '>': '＞', '|': '｜'}
-        for illegal in template:
-            name = name.replace(illegal, template[illegal])
+    # Define a function to replace illegal characters in a string with safe counterparts
+    def safeify(name: str) -> str:
+        illegal_chars = {'\\': '＼', '/': '／', ':': '：', '*': '＊',
+                         '?': '？', '"': '＂', '<': '＜', '>': '＞', '|': '｜'}
+        for illegal, safe in illegal_chars.items():
+            name = name.replace(illegal, safe)
         return name
 
-    def substitute(matched):
+    # Define a function to handle substitution patterns in a string
+    def substitute(matched) -> str:
         key = matched.group(1).split(':')
         if key[0] not in item:
             return ':'.join(key)
         elif key[0] == 'date':
             return item[key[0]].strftime(key[1]) if len(key) > 1 else str(item[key[0]])
         elif key[0] == 'index':
-            return str(item[key[0]]).zfill(int(key[1] if len(key) > 1 else '0'))
+            return str(item[key[0]]).zfill(int(key[1]) if len(key) > 1 else 0)
         elif key[0] == 'text':
             return re.sub(r'<.*?>', '', item[key[0]]).strip()
         else:
             return str(item[key[0]])
 
-    return safeify(re.sub(r'{(.*?)}', substitute, args.name))
+    # Replace substitution patterns with values from the item dictionary and then apply safeify
+    formatted_name = re.sub(r'{(.*?)}', substitute, name_from_url)
+    return safeify(formatted_name)
 
 
 def download(url, path, overwrite):
@@ -346,6 +362,21 @@ def download(url, path, overwrite):
         return False
     else:
         return True
+
+def numberify(x):
+    if re.search(r'^\d+$', x):
+        return int(x)
+    else:
+        return bid_to_mid(x)
+
+def dateify(t):
+    return datetime.datetime.strptime(t, '@%Y%m%d').date()
+
+def parse_point(p):
+    if p.startswith('@'):
+        return dateify(p)
+    else:
+        return numberify(p)
 
 
 if __name__ == '__main__':
@@ -430,21 +461,6 @@ if __name__ == '__main__':
     boundary = args.boundary.split(':')
     boundary = boundary * 2 if len(boundary) == 1 else boundary
 
-    def numberify(x):
-        if re.search(r'^\d+$', x):
-            return int(x)
-        else:
-            return bid_to_mid(x)
-
-    def dateify(t):
-        return datetime.datetime.strptime(t, '@%Y%m%d').date()
-
-    def parse_point(p):
-        if p.startswith('@'):
-            return dateify(p)
-        else:
-            return numberify(p)
-
     try:
         boundary[0] = 0 if boundary[0] == '' else parse_point(boundary[0])
         boundary[1] = float(
@@ -454,7 +470,7 @@ if __name__ == '__main__':
     except:
         quit(f'invalid id range {args.boundary}')
 
-    token = 'SUB={}'.format(args.cookie) if args.cookie else None
+    token = f'SUB={args.cookie}' if args.cookie else None
     pool = concurrent.futures.ThreadPoolExecutor(max_workers=args.size)
 
     for number, user in enumerate(users, 1):

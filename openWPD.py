@@ -1,4 +1,3 @@
-
 import argparse
 import concurrent.futures
 import datetime
@@ -408,8 +407,6 @@ if __name__ == '__main__':
     args = parser.parse_args(nargs_fit(parser, sys.argv[1:]))
 
     if args.users:
-        # users = [user.decode(system_encoding)
-        #          for user in args.users] if is_python2 else args.users
         users = args.users
     elif args.files:
         users = [read_from_file(path.strip()) for path in args.files]
@@ -491,7 +488,6 @@ if __name__ == '__main__':
         while resources and retry <= args.retry:
 
             if retry > 0:
-                # print_fit('automatic retry {}'.format(retry))
                 print_fit(f'automatic retry {retry}')
 
             total = len(resources)

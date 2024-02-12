@@ -17,6 +17,7 @@ from functools import reduce
 These improvements should enhance the readability, maintainability, and robustness of original code.
 """
 
+
 def nargs_fit(parser, args):
     '''
     Improvements made:
@@ -92,10 +93,6 @@ def print_fit(string, pin=False):
         sys.stdout.write(string + '\n')
 
 
-def input_fit(string=''):
-    return input(string)
-
-
 def merge(*dicts):
     result = {}
     for dictionary in dicts:
@@ -117,7 +114,7 @@ def make_dir(path):
 
 def confirm(message):
     while True:
-        answer = input_fit('{} [Y/n] '.format(message)).strip()
+        answer = input(f'{message} [Y/n] ').strip()
         if answer.lower() == 'y':
             return True
         elif answer.lower() == 'n':
@@ -154,6 +151,8 @@ def read_from_file(path):
 def nickname_to_uid(nickname):
     url = f'https://m.weibo.cn/n/{nickname}'
     response = request_fit('GET', url, cookie=token)
+    # if re.search(r'/u/\d{10}$', response.url):
+    #     return response.url[-10:]
     if '/u/' in response.url:
         return response.url.split('/')[-1]
     else:
@@ -363,14 +362,17 @@ def download(url, path, overwrite):
     else:
         return True
 
+
 def numberify(x):
     if re.search(r'^\d+$', x):
         return int(x)
     else:
         return bid_to_mid(x)
 
+
 def dateify(t):
     return datetime.datetime.strptime(t, '@%Y%m%d').date()
+
 
 def parse_point(p):
     if p.startswith('@'):
@@ -381,7 +383,7 @@ def parse_point(p):
 
 if __name__ == '__main__':
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-  
+
     parser = argparse.ArgumentParser(
         prog='openwpd'
     )
@@ -539,8 +541,8 @@ if __name__ == '__main__':
                             f"{'downloading...' if done != total else 'all tasks done'} \
                                 {progress(done, total, True)}", pin=True)
                     else:
-                        print_fit('waiting for cancellation... ({})'.format(
-                            total - done), pin=True)
+                        print_fit(
+                            f'waiting for cancellation... ({total - done})', pin=True)
 
             if cancel:
                 quit()
